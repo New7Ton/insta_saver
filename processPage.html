@@ -1,0 +1,268 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<!script src=FileSaver.js></script>
+	<!script src=myTestScript.js></script>
+	<script src="lightBox/js/lightbox-plus-jquery.js"></script>
+	
+	<style type='text/css'>
+	#box img 
+	{
+		display: block;
+		width: 200px; 
+		background: white;
+		padding: 1px;
+		padding-right: 10px; 
+		border: solid 1px white; 
+		float: left;
+	}
+	
+	#loadBox 
+	{
+		position: absolute; /* Абсолютное позиционирование */
+		top: 250px;
+		left: 230px;
+	}
+	
+	#inputBox 
+	{
+		position: absolute; /* Абсолютное позиционирование */
+		top: 310px;
+	}
+	
+	</style>
+	<link href="lightBox/css/lightbox.css" rel="stylesheet">
+</head>
+
+<body>
+	<form>
+	<div id = "inputBox">
+		<input name="url" type="text" required size="60" placeholder="Ссылка на фотосет пользователя instagram">
+		<input type="button" onclick="ProcessButtonClick(this.form)" value="Отобразить фото">
+		<!input type="button" onclick="ListAllImgs()" value="Перечислить все url"> 
+	</div>
+	</form>
+ 
+	<div id='box'> </div>
+	<div id='loadBox'> </div>
+  
+	<script>
+	
+	var ShiftFormCompleted = false;
+	var ImagesShown = false;
+	var RefArray = new Array();
+	var TotalNumLoadedImages = 0;
+	
+	function Reset()
+	{
+		ImagesShown = false;
+		TotalNumLoadedImages = 0;
+		RefArray.length = 0;
+		DeleteAllImagesFromDiv("box");
+	}
+	
+	function ProcessButtonClick(form)
+	{
+		Reset();
+		ShiftForm(form);
+		AddLoadImage();
+		ProcessUrl(form);
+		ShowImages();
+		//AddCheckBoxes();
+	}
+	
+	function AddCheckBoxes()
+	{	
+		if ( ImagesShown )
+		{			
+			var imgSet = document.getElementsByTagName('img');
+			var totalNumPhotoImages = imgSet.length - 1;
+			
+			var yOffset = -15;
+			
+			for (var i = 0; i < totalNumPhotoImages; i++)
+			{
+				var boxCoordsCurImg = imgSet[i].getBoundingClientRect();
+				var checkBox = document.createElement('input');
+				checkBox.type = "checkbox";
+				checkBox.name = "name";
+				checkBox.value = "value";
+				checkBox.id = "inputBox";
+				
+				checkBox.style.left = (boxCoordsCurImg.left + "px");
+				checkBox.style.top = (boxCoordsCurImg.top + boxCoordsCurImg.height + yOffset + "px");
+				
+				document.getElementById("box").appendChild(checkBox);
+				
+				console.log( boxCoordsCurImg );
+			}
+		}
+		else
+		{
+			setTimeout(AddCheckBoxes, "1");
+		}
+	}
+	
+	function ShowImages()
+	{
+		if ( ShiftFormCompleted && (RefArray.length != 0) && (TotalNumLoadedImages == RefArray.length) )
+		{
+			DeleteAllImagesFromDiv("loadBox");
+			
+			for (var i = 0; i < RefArray.length; i++)
+			{
+				document.getElementById("box").appendChild(RefArray[i]);
+			}
+			
+			ImagesShown = true;
+		}
+		else
+		{
+			setTimeout(ShowImages, "1");
+		}
+	}
+	
+	function AddLoadImage()
+	{
+		if ( ShiftFormCompleted )
+		{			
+			var imgObj = new Image();
+			imgObj.src = "2.gif";
+			document.getElementById("loadBox").appendChild(imgObj);
+		}
+		else
+		{
+			setTimeout(AddLoadImage, "1");
+		}
+	}
+	
+    function ShiftForm(form) 
+	{
+		var inputElems = document.getElementById('inputBox');
+		
+		var curTopVal = getComputedStyle(inputElems).top;
+		var curTopValInt = parseInt(curTopVal);
+		
+		if( curTopValInt > 10 )
+		{
+			curTopValInt -= 3;
+			inputElems.style.top = (curTopValInt + "px");
+			setTimeout(ShiftForm, "1");
+		}
+		else if ( curTopValInt < 140 )
+		{
+			ShiftFormCompleted = true;
+		}
+    }
+	
+    function ProcessUrl(form) 
+	{
+		var url = form.elements.url.value;
+		GetSiteData(url);
+    }
+	
+	function GetSiteData(url)
+	{
+		var XHR = ("onload" in new XMLHttpRequest()) ? XMLHttpRequest : XDomainRequest;
+
+		var xhr = new XHR();
+
+		xhr.open("GET", url, true);
+
+		xhr.onload = function() 
+		{
+		  ParseSiteInfo( this.responseText );
+		}
+
+		xhr.onerror = function() 
+		{
+		  alert( 'Ошибка ' + this.status );
+		}
+
+		xhr.send();
+	}
+	
+	function ParseSiteInfo( srcSiteInfo )
+	{
+		var targetStartPos = "display_url";
+		var targetFinishPos = "display_resources";
+		
+		var curPos = 0;
+		var curStartPos = 0;
+		var curFinishPos = 0;
+		
+		var cntTotalNumImgs = 0;
+		
+		var offsetStartPos = 14;
+		var offsetFinishPos = 3;
+		
+		while (true) 	
+		{
+			curStartPos = srcSiteInfo.indexOf(targetStartPos, curPos);
+			curPos = curStartPos + 1; 
+			
+			cntTotalNumImgs++;
+			if (cntTotalNumImgs == 1)
+			{
+				continue;
+			}
+			
+			if (curStartPos == -1) 
+			{
+				break;
+			}
+			else
+			{
+				curFinishPos = srcSiteInfo.indexOf(targetFinishPos, curStartPos);
+			}
+			
+			var finalStartPosString = curStartPos + offsetStartPos;
+			var finalFinishPosString = curFinishPos - offsetFinishPos;
+			
+			var urlCurImgInSet = srcSiteInfo.substring( finalStartPosString, finalFinishPosString );
+			
+			AddImage( urlCurImgInSet );
+		}
+	}
+	
+	function AddImage( imgUrl )
+	{
+		var newlink = document.createElement('a');
+		var imgObj = new Image();
+		imgObj.onload = function(){ TotalNumLoadedImages++; }
+		imgObj.src = imgUrl;
+		newlink.setAttribute('data-lightbox', 'curSet');
+		newlink.setAttribute('href', imgUrl);
+		newlink.appendChild(imgObj);
+		RefArray.push(newlink);
+	}
+	
+	function ListAllImgs()
+	{
+		/*var div = document.getElementById('box')
+		var elems = div.getElementsByTagName('*')
+		
+		for (i = 0; i < elems.length; i++) 
+		{
+			console.log( elems[i].currentSrc );
+		}*/
+		var FileSaver = require('file-saver');
+		var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
+		FileSaver.saveAs(blob, "hello world.txt");
+	}
+	
+	function DeleteAllImagesFromDiv(divName)
+	{
+		var imgSet = document.getElementById(divName);
+		
+		while(imgSet.firstChild) 
+		{
+			imgSet.removeChild(imgSet.firstChild);
+		}
+	}
+	
+	
+  </script>
+</body>
+
+</html>
