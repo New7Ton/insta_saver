@@ -3,9 +3,19 @@
 	<meta charset="utf-8">
 	<!script src=FileSaver.js></script>
 	<!script src=myTestScript.js></script>
-	<script src="lightBox/js/lightbox-plus-jquery.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="elastislide/css/demo.css" />
+	<link rel="stylesheet" type="text/css" href="elastislide/css/elastislide.css" />
+	<link rel="stylesheet" type="text/css" href="elastislide/css/custom.css" />
 	
+	<script src="elastislide/js/jquery-1.8.2.min.js"></script>
+	<script src="elastislide/js/modernizr.custom.17475.js"></script>
+	<script src="elastislide/js/jquerypp.custom.js"></script>
+	<script src="elastislide/js/jquery.elastislide.js"></script>
+
 	<style type='text/css'>
+	html { overflow:  hidden; }
+	
 	#box img 
 	{
 		display: block;
@@ -27,38 +37,63 @@
 	#inputBox 
 	{
 		position: absolute; /* Абсолютное позиционирование */
-		top: 310px;
+		top: 230px;
+		margin: 0 auto;
 	}
 	
+	body 
+	{
+		background: white;
+		background-color: white;
+	}
 	</style>
-	<link href="lightBox/css/lightbox.css" rel="stylesheet">
 </head>
 
 <body>
 	<form>
 	<div id = "inputBox">
 		<input name="url" type="text" required size="60" placeholder="Ссылка на фотосет пользователя instagram">
-		<input type="button" onclick="ProcessButtonClick(this.form)" value="Отобразить фото">
+		<input type="button" onclick="ProcessButtonClick(this.form)" value="Получить фото">
 		<!input type="button" onclick="ListAllImgs()" value="Перечислить все url"> 
 	</div>
 	</form>
  
-	<div id='box'> </div>
 	<div id='loadBox'> </div>
+	
+	<div class="container demo-4">
+			<!-- Codrops top bar -->
+            <div class="main">
+				<div class="gallery">
+					<!-- Elastislide Carousel -->
+					<ul id="carousel" class="elastislide-list">
+					</ul>
+					<!-- End Elastislide Carousel -->
+
+					<div class="image-preview" id="firstImage">
+					</div>
+				</div>
+
+			</div>
+	</div>
   
 	<script>
+	var SIZE_PREVIEW_IMAGE_IN_PX = 90;
+	var SIZE_CURRENT_IMAGE_IN_PX = 300;
 	
 	var ShiftFormCompleted = false;
 	var ImagesShown = false;
 	var RefArray = new Array();
 	var TotalNumLoadedImages = 0;
+	var preview = null;
+	var carouselItems = null;
 	
 	function Reset()
 	{
 		ImagesShown = false;
 		TotalNumLoadedImages = 0;
 		RefArray.length = 0;
-		DeleteAllImagesFromDiv("box");
+		DeleteAllImagesFromDiv("carousel");
+		DeleteAllImagesFromDiv("loadBox");
 	}
 	
 	function ProcessButtonClick(form)
@@ -68,7 +103,50 @@
 		AddLoadImage();
 		ProcessUrl(form);
 		ShowImages();
+		UpdateImageViewer();
 		//AddCheckBoxes();
+	}
+	
+	
+
+	function changeImage( el, pos ) 
+	{
+		preview.attr( 'src', el.data( 'preview' ) );
+		carouselItems.removeClass( 'current-img' );
+		el.addClass( 'current-img' );
+		carousel.setCurrent( pos );
+	}
+	
+	
+	
+	function UpdateImageViewer()
+	{	
+		if ( ImagesShown )
+		{							
+			// example how to integrate with a previewer
+			var current = 0;
+			preview = $( '#preview' );
+			$carouselEl = $( '#carousel' );
+			carouselItems = $carouselEl.children();
+			carousel = $carouselEl.elastislide( 
+				{
+					current : current,
+					minItems : 4,
+					onClick : function( el, pos, evt ) 
+					{
+						changeImage( el, pos );
+						evt.preventDefault();
+					},
+					onReady : function() 
+					{
+						changeImage( carouselItems.eq( current ), current );
+					}
+				} );
+		}
+		else
+		{
+			setTimeout(UpdateImageViewer, "1");
+		}
 	}
 	
 	function AddCheckBoxes()
@@ -92,7 +170,7 @@
 				checkBox.style.left = (boxCoordsCurImg.left + "px");
 				checkBox.style.top = (boxCoordsCurImg.top + boxCoordsCurImg.height + yOffset + "px");
 				
-				document.getElementById("box").appendChild(checkBox);
+				document.getElementById("carousel").appendChild(checkBox);
 				
 				console.log( boxCoordsCurImg );
 			}
@@ -106,14 +184,23 @@
 	function ShowImages()
 	{
 		if ( ShiftFormCompleted && (RefArray.length != 0) && (TotalNumLoadedImages == RefArray.length) )
-		{
+		{	
 			DeleteAllImagesFromDiv("loadBox");
-			
+		
 			for (var i = 0; i < RefArray.length; i++)
 			{
-				document.getElementById("box").appendChild(RefArray[i]);
+				document.getElementById("carousel").appendChild(RefArray[i]);
+				
+				if (i == 0)
+				{
+					var imgObg = new Image();
+					imgObg.src = RefArray[i].firstChild.firstChild.src;
+					imgObg.setAttribute("id", "preview");
+					imgObg.style.width = SIZE_CURRENT_IMAGE_IN_PX + "px";
+					document.getElementById("firstImage").appendChild(imgObg);
+				}
 			}
-			
+	
 			ImagesShown = true;
 		}
 		else
@@ -227,14 +314,20 @@
 	
 	function AddImage( imgUrl )
 	{
-		var newlink = document.createElement('a');
 		var imgObj = new Image();
 		imgObj.onload = function(){ TotalNumLoadedImages++; }
 		imgObj.src = imgUrl;
-		newlink.setAttribute('data-lightbox', 'curSet');
-		newlink.setAttribute('href', imgUrl);
+		imgObj.style.width = SIZE_PREVIEW_IMAGE_IN_PX + "px";
+		
+		var newlink = document.createElement('a');
+		newlink.setAttribute('href', "#");
 		newlink.appendChild(imgObj);
-		RefArray.push(newlink);
+		
+		var newLi = document.createElement('li');
+		newLi.setAttribute('data-preview', imgUrl);
+		newLi.appendChild(newlink);
+		
+		RefArray.push(newLi);
 	}
 	
 	function ListAllImgs()
@@ -261,6 +354,8 @@
 		}
 	}
 	
+	
+
 	
   </script>
 </body>
