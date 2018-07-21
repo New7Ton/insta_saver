@@ -12,6 +12,7 @@
 	<script src="elastislide/js/modernizr.custom.17475.js"></script>
 	<script src="elastislide/js/jquerypp.custom.js"></script>
 	<script src="elastislide/js/jquery.elastislide.js"></script>
+	<script src="FileSaver.js"></script>
 
 	<style type='text/css'>
 	html { overflow:  hidden; }
@@ -54,7 +55,7 @@
 	<div id = "inputBox">
 		<input name="url" type="text" required size="60" placeholder="Ссылка на фотосет пользователя instagram">
 		<input type="button" onclick="ProcessButtonClick(this.form)" value="Получить фото">
-		<!input type="button" onclick="ListAllImgs()" value="Перечислить все url"> 
+		<input type="button" onclick="SaveSelectedImages()" value="Сохранить"> 
 	</div>
 	</form>
  
@@ -86,6 +87,44 @@
 	var TotalNumLoadedImages = 0;
 	var preview = null;
 	var carouselItems = null;
+	var ArrayUrlsSelectedImages = new Array();
+	
+	function SaveImage (imgUrl)
+	{
+		var xhr = new XMLHttpRequest();
+
+		xhr.responseType = 'blob'; //Set the response type to blob so xhr.response returns a blob
+		xhr.open('GET', imgUrl , true);
+
+		xhr.onreadystatechange = function () 
+		{
+			if (xhr.readyState == xhr.DONE) 
+			{
+				var fileName = GetFileNameFromUrl(xhr.responseURL);
+				saveAs(xhr.response, fileName);
+			}
+		};
+
+		xhr.send(); //Request is sent
+
+	}
+	
+	function GetFileNameFromUrl(Url)
+	{		
+		var urlStr = Url;
+		var massSubStringsUrl = urlStr.split("/");
+		var fileName = massSubStringsUrl[massSubStringsUrl.length - 1];
+		
+		return fileName;
+	}
+	
+	function SaveSelectedImages()
+	{
+		for (var i = 0; i < ArrayUrlsSelectedImages.length; i++)
+		{
+			SaveImage( ArrayUrlsSelectedImages[i] );
+		}
+	}
 	
 	function Reset()
 	{
@@ -104,10 +143,7 @@
 		ProcessUrl(form);
 		ShowImages();
 		UpdateImageViewer();
-		//AddCheckBoxes();
 	}
-	
-	
 
 	function changeImage( el, pos ) 
 	{
@@ -116,8 +152,6 @@
 		el.addClass( 'current-img' );
 		carousel.setCurrent( pos );
 	}
-	
-	
 	
 	function UpdateImageViewer()
 	{	
@@ -135,6 +169,20 @@
 					onClick : function( el, pos, evt ) 
 					{
 						changeImage( el, pos );
+						
+						var checkFlag = CheckClickArea(evt.srcElement.width, evt.srcElement.height, evt.offsetX, evt.offsetY);
+						if (checkFlag)
+						{
+							if ( ArrayUrlsSelectedImages.indexOf(evt.srcElement.src) == -1)
+							{
+								ArrayUrlsSelectedImages.push(evt.srcElement.src);
+							}
+							else
+							{
+								ArrayUrlsSelectedImages.pop(evt.srcElement.src);
+							}
+						}
+						
 						evt.preventDefault();
 					},
 					onReady : function() 
@@ -149,36 +197,21 @@
 		}
 	}
 	
-	function AddCheckBoxes()
-	{	
-		if ( ImagesShown )
-		{			
-			var imgSet = document.getElementsByTagName('img');
-			var totalNumPhotoImages = imgSet.length - 1;
-			
-			var yOffset = -15;
-			
-			for (var i = 0; i < totalNumPhotoImages; i++)
-			{
-				var boxCoordsCurImg = imgSet[i].getBoundingClientRect();
-				var checkBox = document.createElement('input');
-				checkBox.type = "checkbox";
-				checkBox.name = "name";
-				checkBox.value = "value";
-				checkBox.id = "inputBox";
-				
-				checkBox.style.left = (boxCoordsCurImg.left + "px");
-				checkBox.style.top = (boxCoordsCurImg.top + boxCoordsCurImg.height + yOffset + "px");
-				
-				document.getElementById("carousel").appendChild(checkBox);
-				
-				console.log( boxCoordsCurImg );
-			}
+	function CheckClickArea(width, height, offsetX, offsetY)
+	{
+		var areaInPx = 20;
+		var validArea = false;
+		
+		if ( ((width - offsetX) < areaInPx) && ((height - offsetY) < areaInPx) )
+		{
+			validArea = true;
 		}
 		else
 		{
-			setTimeout(AddCheckBoxes, "1");
+			validArea = false;
 		}
+		
+		return validArea;
 	}
 	
 	function ShowImages()
@@ -193,11 +226,11 @@
 				
 				if (i == 0)
 				{
-					var imgObg = new Image();
-					imgObg.src = RefArray[i].firstChild.firstChild.src;
-					imgObg.setAttribute("id", "preview");
-					imgObg.style.width = SIZE_CURRENT_IMAGE_IN_PX + "px";
-					document.getElementById("firstImage").appendChild(imgObg);
+					var imgObj = new Image();
+					imgObj.src = RefArray[i].firstChild.firstChild.src;
+					imgObj.setAttribute("id", "preview");
+					imgObj.style.width = SIZE_CURRENT_IMAGE_IN_PX + "px";
+					document.getElementById("firstImage").appendChild(imgObj);
 				}
 			}
 	
@@ -288,20 +321,18 @@
 			curStartPos = srcSiteInfo.indexOf(targetStartPos, curPos);
 			curPos = curStartPos + 1; 
 			
-			cntTotalNumImgs++;
-			if (cntTotalNumImgs == 1)
-			{
-				continue;
-			}
-			
 			if (curStartPos == -1) 
 			{
 				break;
 			}
-			else
+			
+			cntTotalNumImgs++;
+			if (cntTotalNumImgs == 2)
 			{
-				curFinishPos = srcSiteInfo.indexOf(targetFinishPos, curStartPos);
+				continue;
 			}
+				
+			curFinishPos = srcSiteInfo.indexOf(targetFinishPos, curStartPos);
 			
 			var finalStartPosString = curStartPos + offsetStartPos;
 			var finalFinishPosString = curFinishPos - offsetFinishPos;
