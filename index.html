@@ -1,8 +1,534 @@
 <html>
- <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
- </head>
- <frameset>
-   <frame src="processPage.html" name="CONTENT">
- </frameset>
+<head>
+	<meta charset="utf-8">
+	<!script src=FileSaver.js></script>
+	<!script src=myTestScript.js></script>
+
+	<link rel="stylesheet" type="text/css" href="elastislide/css/demo.css" />
+	<link rel="stylesheet" type="text/css" href="elastislide/css/elastislide.css" />
+	<link rel="stylesheet" type="text/css" href="elastislide/css/custom.css" />
+	
+	<script src="elastislide/js/jquery-1.8.2.min.js"></script>
+	<script src="elastislide/js/modernizr.custom.17475.js"></script>
+	<script src="elastislide/js/jquerypp.custom.js"></script>
+	<script src="elastislide/js/jquery.elastislide.js"></script>
+	<script src="FileSaver.js"></script>
+	<script src="https://vk.com/js/api/xd_connection.js?2"  type="text/javascript"></script>
+
+	<style type='text/css'>
+	html { overflow:  hidden; }
+	
+	#box img 
+	{
+		display: block;
+		width: 200px; 
+		background: white;
+		padding: 1px;
+		padding-right: 10px; 
+		border: solid 1px white; 
+		float: left;
+	}
+	
+	#loadBox 
+	{
+		position: absolute; /* Абсолютное позиционирование */
+		top: 250px;
+		left: 230px;
+	}
+	
+	#inputBox 
+	{
+		position: absolute; /* Абсолютное позиционирование */
+		top: 230px;
+		margin: 0 auto;
+	}
+	
+	body 
+	{
+		background: white;
+		background-color: white;
+	}
+	</style>
+</head>
+
+<body>
+	<form>
+	<div id = "inputBox">
+		<input name="url" type="text" required size="60" placeholder="Ссылка на фотосет пользователя instagram">
+		<input type="button" onclick="ProcessButtonClick(this.form)" value="Получить фото">
+		<input type="button" onclick="SaveSelectedImages()" value="Сохранить"> 
+		<input type="button" onclick="SaveSelectedImagesInVk()" value="Сохранить ВК"> 
+	</div>
+	</form>
+ 
+	<div id='loadBox'> </div>
+	
+	<div class="container demo-4">
+			<!-- Codrops top bar -->
+            <div class="main">
+				<div class="gallery">
+					<!-- Elastislide Carousel -->
+					<ul id="carousel" class="elastislide-list">
+					</ul>
+					<!-- End Elastislide Carousel -->
+
+					<div class="image-preview" id="firstImage">
+					</div>
+				</div>
+
+			</div>
+	</div>
+  
+	<script>
+	var SIZE_PREVIEW_IMAGE_IN_PX = 90;
+	var SIZE_CURRENT_IMAGE_IN_PX = 300;
+	
+	var ShiftFormCompleted = false;
+	var ImagesShown = false;
+	var RefArray = new Array();
+	var TotalNumLoadedImages = 0;
+	var preview = null;
+	var carouselItems = null;
+	var ArrayUrlsSelectedImages = new Array();
+	var VkSuccessInit = false;
+	var AlbumName = "InstaSaver";
+	var AlbumId = null;
+	var UrlUploadServer = null;
+
+	var UrlStr = document.location.href;
+	var UrlParams = UrlStr.replace('?','').split('&').reduce(
+        function(p,e){
+            var a = e.split('=');
+            p[ decodeURIComponent(a[0])] = decodeURIComponent(a[1]);
+            return p;
+        },
+        {}
+    );
+
+	window.onload = function ()
+	{
+		VK.init(function() { 
+		//	VK.callMethod("setTitle", "InstaSaver");
+		//	VK.callMethod("showInstallBox");
+			VK.callMethod("showSettingsBox", 4);
+			VkSuccessInit = true;
+			
+		  }, function() { 
+		  
+			VkSuccessInit = false;
+			 // API initialization failed 
+			 // Can reload page here 
+		}, '5.80'); 
+	}
+	
+	function SaveSelectedImagesInVk()
+	{
+		AlbumId = null;
+		UrlUploadServer = null;
+		
+		GetAppAlbumId();
+		CheckAndCreateAlbum();
+		GetServerForLoadPhoto();
+	}
+	
+	function GetAppAlbumId()
+	{
+		if (VkSuccessInit)
+		{	
+			$.ajax({
+			  url: 'https://api.vk.com/method/photos.getAlbums?',
+			  data: {
+				owner_id: UrlParams["viewer_id"],
+				v: 5.80,
+				access_token: UrlParams["access_token"]
+			  },
+			  type: 'GET',
+			  dataType: 'jsonp',
+			  success: function(data) 
+			  {
+				var totalNumAlbums = data.response.count;
+				var albumsArray = data.response.items;
+				
+				for (var i = 0; i < totalNumAlbums; i++)
+				{
+					if ( AlbumName == albumsArray[i]["title"] )
+					{
+						AlbumId = albumsArray[i]["id"];
+					}
+				}
+				
+				if (AlbumId == null)
+				{
+					AlbumId = -1;
+				}
+			}})
+		}
+		else
+		{
+			setTimeout(GetAppAlbumId, "1");
+		}
+	}
+	
+	function CheckAndCreateAlbum()
+	{
+		if (AlbumId != null)
+		{
+			if (AlbumId == -1)
+			{
+				CreateAlbum();
+			}
+		}
+		else
+		{
+			setTimeout(CheckAndCreateAlbum, "1");
+		}
+	}
+	
+	function GetServerForLoadPhoto()
+	{
+		if ( (AlbumId != null) && (AlbumId != -1) )
+		{
+			GetUrlUploadServer(AlbumId);
+		}
+		else
+		{
+			setTimeout(GetServerForLoadPhoto, "1");
+		}
+	}
+	
+	function GetUrlUploadServer(albumIdParam)
+	{			
+		$.ajax({
+		  url: 'https://api.vk.com/method/photos.getUploadServer?',
+		  data: {
+			album_id: albumIdParam,
+			v: 5.80,
+			access_token: UrlParams["access_token"]
+		  },
+		  type: 'GET',
+		  dataType: 'jsonp',
+		  success: function(data) {
+			UrlUploadServer = data.response.upload_url;
+		}})
+	}
+		
+	function CreateAlbum()
+	{			
+		$.ajax({
+		  url: 'https://api.vk.com/method/photos.createAlbum?',
+		  data: {
+			title: AlbumName,
+			v: 5.80,
+			access_token: UrlParams["access_token"]
+		  },
+		  type: 'GET',
+		  dataType: 'jsonp',
+		  success: function(data) 
+		  {
+			AlbumId = data.response.id;
+		}})
+	}
+	
+	function SaveImage (imgUrl)
+	{
+		var xhr = new XMLHttpRequest();
+
+		xhr.responseType = 'blob'; //Set the response type to blob so xhr.response returns a blob
+		xhr.open('GET', imgUrl , true);
+
+		xhr.onreadystatechange = function () 
+		{
+			if (xhr.readyState == xhr.DONE) 
+			{
+				var fileName = GetFileNameFromUrl(xhr.responseURL);
+				saveAs(xhr.response, fileName);
+			}
+		};
+
+		xhr.send(); //Request is sent
+
+	}
+	
+	function GetFileNameFromUrl(Url)
+	{		
+		var urlStr = Url;
+		var massSubStringsUrl = urlStr.split("/");
+		var fileName = massSubStringsUrl[massSubStringsUrl.length - 1];
+		
+		return fileName;
+	}
+	
+	function SaveSelectedImages()
+	{
+		for (var i = 0; i < ArrayUrlsSelectedImages.length; i++)
+		{
+			SaveImage( ArrayUrlsSelectedImages[i] );
+		}
+	}
+	
+	function Reset()
+	{
+		ImagesShown = false;
+		TotalNumLoadedImages = 0;
+		RefArray.length = 0;
+		DeleteAllImagesFromDiv("carousel");
+		DeleteAllImagesFromDiv("loadBox");
+	}
+	
+	function ProcessButtonClick(form)
+	{
+		Reset();
+		ShiftForm(form);
+		AddLoadImage();
+		ProcessUrl(form);
+		ShowImages();
+		UpdateImageViewer();
+	}
+
+	function changeImage( el, pos ) 
+	{
+		preview.attr( 'src', el.data( 'preview' ) );
+		carouselItems.removeClass( 'current-img' );
+		el.addClass( 'current-img' );
+		carousel.setCurrent( pos );
+	}
+	
+	function UpdateImageViewer()
+	{	
+		if ( ImagesShown )
+		{							
+			// example how to integrate with a previewer
+			var current = 0;
+			preview = $( '#preview' );
+			$carouselEl = $( '#carousel' );
+			carouselItems = $carouselEl.children();
+			carousel = $carouselEl.elastislide( 
+				{
+					current : current,
+					minItems : 4,
+					onClick : function( el, pos, evt ) 
+					{
+						changeImage( el, pos );
+						
+						var checkFlag = CheckClickArea(evt.srcElement.width, evt.srcElement.height, evt.offsetX, evt.offsetY);
+						if (checkFlag)
+						{
+							if ( ArrayUrlsSelectedImages.indexOf(evt.srcElement.src) == -1)
+							{
+								ArrayUrlsSelectedImages.push(evt.srcElement.src);
+							}
+							else
+							{
+								ArrayUrlsSelectedImages.pop(evt.srcElement.src);
+							}
+						}
+						
+						evt.preventDefault();
+					},
+					onReady : function() 
+					{
+						changeImage( carouselItems.eq( current ), current );
+					}
+				} );
+		}
+		else
+		{
+			setTimeout(UpdateImageViewer, "1");
+		}
+	}
+	
+	function CheckClickArea(width, height, offsetX, offsetY)
+	{
+		var areaInPx = 20;
+		var validArea = false;
+		
+		if ( ((width - offsetX) < areaInPx) && ((height - offsetY) < areaInPx) )
+		{
+			validArea = true;
+		}
+		else
+		{
+			validArea = false;
+		}
+		
+		return validArea;
+	}
+	
+	function ShowImages()
+	{
+		if ( ShiftFormCompleted && (RefArray.length != 0) && (TotalNumLoadedImages == RefArray.length) )
+		{	
+			DeleteAllImagesFromDiv("loadBox");
+		
+			for (var i = 0; i < RefArray.length; i++)
+			{
+				document.getElementById("carousel").appendChild(RefArray[i]);
+				
+				if (i == 0)
+				{
+					var imgObj = new Image();
+					imgObj.src = RefArray[i].firstChild.firstChild.src;
+					imgObj.setAttribute("id", "preview");
+					imgObj.style.width = SIZE_CURRENT_IMAGE_IN_PX + "px";
+					document.getElementById("firstImage").appendChild(imgObj);
+				}
+			}
+	
+			ImagesShown = true;
+		}
+		else
+		{
+			setTimeout(ShowImages, "1");
+		}
+	}
+	
+	function AddLoadImage()
+	{
+		if ( ShiftFormCompleted )
+		{			
+			var imgObj = new Image();
+			imgObj.src = "2.gif";
+			document.getElementById("loadBox").appendChild(imgObj);
+		}
+		else
+		{
+			setTimeout(AddLoadImage, "1");
+		}
+	}
+	
+    function ShiftForm(form) 
+	{
+		var inputElems = document.getElementById('inputBox');
+		
+		var curTopVal = getComputedStyle(inputElems).top;
+		var curTopValInt = parseInt(curTopVal);
+		
+		if( curTopValInt > 10 )
+		{
+			curTopValInt -= 3;
+			inputElems.style.top = (curTopValInt + "px");
+			setTimeout(ShiftForm, "1");
+		}
+		else if ( curTopValInt < 140 )
+		{
+			ShiftFormCompleted = true;
+		}
+    }
+	
+    function ProcessUrl(form) 
+	{
+		var url = form.elements.url.value;
+		GetSiteData(url);
+    }
+	
+	function GetSiteData(url)
+	{
+		var XHR = ("onload" in new XMLHttpRequest()) ? XMLHttpRequest : XDomainRequest;
+
+		var xhr = new XHR();
+
+		xhr.open("GET", url, true);
+
+		xhr.onload = function() 
+		{
+		  ParseSiteInfo( this.responseText );
+		}
+
+		xhr.onerror = function() 
+		{
+		  alert( 'Ошибка ' + this.status );
+		}
+
+		xhr.send();
+	}
+	
+	function ParseSiteInfo( srcSiteInfo )
+	{
+		var targetStartPos = "display_url";
+		var targetFinishPos = "display_resources";
+		
+		var curPos = 0;
+		var curStartPos = 0;
+		var curFinishPos = 0;
+		
+		var cntTotalNumImgs = 0;
+		
+		var offsetStartPos = 14;
+		var offsetFinishPos = 3;
+		
+		while (true) 	
+		{
+			curStartPos = srcSiteInfo.indexOf(targetStartPos, curPos);
+			curPos = curStartPos + 1; 
+			
+			if (curStartPos == -1) 
+			{
+				break;
+			}
+			
+			cntTotalNumImgs++;
+			if (cntTotalNumImgs == 2)
+			{
+				continue;
+			}
+				
+			curFinishPos = srcSiteInfo.indexOf(targetFinishPos, curStartPos);
+			
+			var finalStartPosString = curStartPos + offsetStartPos;
+			var finalFinishPosString = curFinishPos - offsetFinishPos;
+			
+			var urlCurImgInSet = srcSiteInfo.substring( finalStartPosString, finalFinishPosString );
+			
+			AddImage( urlCurImgInSet );
+		}
+	}
+	
+	function AddImage( imgUrl )
+	{
+		var imgObj = new Image();
+		imgObj.onload = function(){ TotalNumLoadedImages++; }
+		imgObj.src = imgUrl;
+		imgObj.style.width = SIZE_PREVIEW_IMAGE_IN_PX + "px";
+		
+		var newlink = document.createElement('a');
+		newlink.setAttribute('href', "#");
+		newlink.appendChild(imgObj);
+		
+		var newLi = document.createElement('li');
+		newLi.setAttribute('data-preview', imgUrl);
+		newLi.appendChild(newlink);
+		
+		RefArray.push(newLi);
+	}
+	
+	function ListAllImgs()
+	{
+		/*var div = document.getElementById('box')
+		var elems = div.getElementsByTagName('*')
+		
+		for (i = 0; i < elems.length; i++) 
+		{
+			console.log( elems[i].currentSrc );
+		}*/
+		var FileSaver = require('file-saver');
+		var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
+		FileSaver.saveAs(blob, "hello world.txt");
+	}
+	
+	function DeleteAllImagesFromDiv(divName)
+	{
+		var imgSet = document.getElementById(divName);
+		
+		while(imgSet.firstChild) 
+		{
+			imgSet.removeChild(imgSet.firstChild);
+		}
+	}
+	
+	
+
+	
+  </script>
+</body>
+
 </html>

@@ -13,6 +13,7 @@
 	<script src="elastislide/js/jquerypp.custom.js"></script>
 	<script src="elastislide/js/jquery.elastislide.js"></script>
 	<script src="FileSaver.js"></script>
+	<script src="https://vk.com/js/api/xd_connection.js?2"  type="text/javascript"></script>
 
 	<style type='text/css'>
 	html { overflow:  hidden; }
@@ -56,6 +57,7 @@
 		<input name="url" type="text" required size="60" placeholder="Ссылка на фотосет пользователя instagram">
 		<input type="button" onclick="ProcessButtonClick(this.form)" value="Получить фото">
 		<input type="button" onclick="SaveSelectedImages()" value="Сохранить"> 
+		<input type="button" onclick="SaveSelectedImagesInVk()" value="Сохранить ВК"> 
 	</div>
 	</form>
  
@@ -88,6 +90,31 @@
 	var preview = null;
 	var carouselItems = null;
 	var ArrayUrlsSelectedImages = new Array();
+	var VkSuccessInit = false;
+	
+	window.onload = function ()
+	{
+		VK.init(function() { 
+		//	VK.callMethod("setTitle", "InstaSaver");
+		//	VK.callMethod("showInstallBox");
+		//	VK.callMethod("showSettingsBox", 4);
+		  }, function() { 
+			 // API initialization failed 
+			 // Can reload page here 
+		}, '5.80'); 
+	}
+	
+	function SaveSelectedImagesInVk()
+	{
+		if (VkSuccessInit)
+		{		
+		}
+		else
+		{
+			setTimeout(SaveSelectedImagesInVk, "1");
+		}
+	}
+			  
 	
 	function SaveImage (imgUrl)
 	{
