@@ -67,17 +67,11 @@
 			<!-- Codrops top bar -->
             <div class="main">
 				<div class="gallery">
-					<!-- Elastislide Carousel -->
-					<ul id="carousel" class="elastislide-list">
-					</ul>
-					<!-- End Elastislide Carousel -->
-
-					<div class="image-preview" id="firstImage">
-					</div>
 				</div>
 
 			</div>
 	</div>
+	
   
 	<script>
 	var SIZE_PREVIEW_IMAGE_IN_PX = 90;
@@ -94,6 +88,9 @@
 	var AlbumName = "InstaSaver";
 	var AlbumId = null;
 	var UrlUploadServer = null;
+	var ImagesFormData = new FormData();
+	var ImageBlob = null;
+	var LoadWasOnce = false;
 
 	var UrlStr = document.location.href;
 	var UrlParams = UrlStr.replace('?','').split('&').reduce(
@@ -129,6 +126,22 @@
 		GetAppAlbumId();
 		CheckAndCreateAlbum();
 		GetServerForLoadPhoto();
+		UploadSelectedImages();
+	}
+	
+	function UploadSelectedImages ()
+	{
+		if( UrlUploadServer != null )
+		{	
+			for (var nImageUrl = 0; nImageUrl < ArrayUrlsSelectedImages.length; nImageUrl++ )
+			{	
+				UploadPhoto(ArrayUrlsSelectedImages[nImageUrl]);
+			}
+		}
+		else
+		{
+			setTimeout(UploadSelectedImages, "1");
+		}
 	}
 	
 	function GetAppAlbumId()
@@ -188,7 +201,18 @@
 	{
 		if ( (AlbumId != null) && (AlbumId != -1) )
 		{
-			GetUrlUploadServer(AlbumId);
+			$.ajax({
+			  url: 'https://api.vk.com/method/photos.getUploadServer?',
+			  data: {
+				album_id: AlbumId,
+				v: 5.80,
+				access_token: UrlParams["access_token"]
+			  },
+			  type: 'GET',
+			  dataType: 'jsonp',
+			  success: function(data) {
+				UrlUploadServer = data.response.upload_url;
+			}})
 		}
 		else
 		{
@@ -196,20 +220,47 @@
 		}
 	}
 	
-	function GetUrlUploadServer(albumIdParam)
-	{			
-		$.ajax({
-		  url: 'https://api.vk.com/method/photos.getUploadServer?',
-		  data: {
-			album_id: albumIdParam,
-			v: 5.80,
-			access_token: UrlParams["access_token"]
-		  },
-		  type: 'GET',
-		  dataType: 'jsonp',
-		  success: function(data) {
-			UrlUploadServer = data.response.upload_url;
-		}})
+	function UploadPhoto( photoUrl)
+	{		
+		var encodeUri = encodeURIComponent(UrlUploadServer);
+		var someObj = {url:encodeUri, photo:photoUrl};
+		var xhr = new XMLHttpRequest();			
+		xhr.open('POST', 'scratch.php');
+		xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');			
+		xhr.send('param=' + JSON.stringify(someObj));
+		xhr.onreadystatechange = function()
+		{
+		  if (this.readyState == 4) 
+		  {
+			if (this.status == 200)
+			{
+			  console.log(xhr.responseText);
+			  
+			  var jsonResp = JSON.parse(xhr.responseText);
+			  
+				$.ajax({
+				url: 'https://api.vk.com/method/photos.save?',
+				data: {
+					server: jsonResp["server"],
+					photos_list: jsonResp["photos_list"],
+					album_id: jsonResp["aid"],
+					hash: jsonResp["hash"],
+					v: 5.80,
+					access_token: UrlParams["access_token"]
+				},
+				type: 'GET',
+				dataType: 'jsonp',
+				success: function(data) 
+				{
+					var success = null;
+				}})
+			}
+			else
+			{
+			  console.log('ajax error');
+			}
+		  }
+		};
 	}
 		
 	function CreateAlbum()
@@ -249,6 +300,25 @@
 
 	}
 	
+	function GetImageBlob (imgUrl)
+	{
+		var xhr = new XMLHttpRequest();
+
+		xhr.responseType = 'arraybuffer'; //Set the response type to blob so xhr.response returns a blob
+		xhr.open('GET', imgUrl , true);
+
+		xhr.onreadystatechange = function () 
+		{
+			if (xhr.readyState == xhr.DONE) 
+			{
+				ImageBlob = new Blob([xhr.response], {type: "image/png"});
+			}
+		};
+
+		xhr.send(); //Request is sent
+
+	}
+	
 	function GetFileNameFromUrl(Url)
 	{		
 		var urlStr = Url;
@@ -271,18 +341,42 @@
 		ImagesShown = false;
 		TotalNumLoadedImages = 0;
 		RefArray.length = 0;
-		DeleteAllImagesFromDiv("carousel");
+		//DeleteAllImagesFromDiv("carousel");
 		DeleteAllImagesFromDiv("loadBox");
 	}
 	
 	function ProcessButtonClick(form)
 	{
+		if (LoadWasOnce == false)
+		{
+			ShiftForm(form);
+			
+			LoadWasOnce = true;
+		}
+		else
+		{	
+			$( ".elastislide-wrapper.elastislide-horizontal" ).remove();
+			$( ".elastislide-carousel" ).remove();
+			$( ".image-preview" ).remove();
+		}
+		
+		gallaryEl = document.getElementsByClassName('gallery' );
+		
+		var ulCarousel = document.createElement('ul');
+        ulCarousel.setAttribute('id','carousel');
+        ulCarousel.setAttribute('class','elastislide-list');
+		gallaryEl[0].appendChild(ulCarousel);
+		
+		var divPreview = document.createElement('div');
+        divPreview.setAttribute('id','firstImage');
+        divPreview.setAttribute('class','image-preview');
+		gallaryEl[0].appendChild(divPreview);
+		
 		Reset();
-		ShiftForm(form);
 		AddLoadImage();
+		UpdateImageViewer();
 		ProcessUrl(form);
 		ShowImages();
-		UpdateImageViewer();
 	}
 
 	function changeImage( el, pos ) 
@@ -308,7 +402,6 @@
 					minItems : 4,
 					onClick : function( el, pos, evt ) 
 					{
-						changeImage( el, pos );
 						
 						var checkFlag = CheckClickArea(evt.srcElement.width, evt.srcElement.height, evt.offsetX, evt.offsetY);
 						if (checkFlag)
@@ -322,8 +415,12 @@
 								ArrayUrlsSelectedImages.pop(evt.srcElement.src);
 							}
 						}
+						else
+						{
+							changeImage( el, pos );
+							evt.preventDefault();
+						}
 						
-						evt.preventDefault();
 					},
 					onReady : function() 
 					{
@@ -499,20 +596,6 @@
 		newLi.appendChild(newlink);
 		
 		RefArray.push(newLi);
-	}
-	
-	function ListAllImgs()
-	{
-		/*var div = document.getElementById('box')
-		var elems = div.getElementsByTagName('*')
-		
-		for (i = 0; i < elems.length; i++) 
-		{
-			console.log( elems[i].currentSrc );
-		}*/
-		var FileSaver = require('file-saver');
-		var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
-		FileSaver.saveAs(blob, "hello world.txt");
 	}
 	
 	function DeleteAllImagesFromDiv(divName)
