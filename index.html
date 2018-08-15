@@ -1,8 +1,6 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<!script src=FileSaver.js></script>
-	<!script src=myTestScript.js></script>
 
 	<link rel="stylesheet" type="text/css" href="elastislide/css/demo.css" />
 	<link rel="stylesheet" type="text/css" href="elastislide/css/elastislide.css" />
@@ -48,6 +46,27 @@
 		background: white;
 		background-color: white;
 	}
+	
+	.ImageSelectViewerContainer { position: relative; }
+	.ImageDiv { }
+ 
+	.ImageSelectViewer { position: absolute; 
+						width: 30px; 
+						height: 30px;
+						right: 0px; 
+						bottom: 0px;
+						background: #83A7C9;
+						border-radius: 50%;}
+						
+	
+	.ImageSelectViewer_selected { position: absolute; 
+						width: 30px; 
+						height: 30px;
+						right: 0px; 
+						bottom: 0px;
+						background: #13A7C9;
+						border-radius: 50%;}
+						
 	</style>
 </head>
 
@@ -402,17 +421,20 @@
 					minItems : 4,
 					onClick : function( el, pos, evt ) 
 					{
-						
-						var checkFlag = CheckClickArea(evt.srcElement.width, evt.srcElement.height, evt.offsetX, evt.offsetY);
-						if (checkFlag)
+						if ( (evt.srcElement.className == 'ImageSelectViewer')|| (evt.srcElement.className == 'ImageSelectViewer_selected') )
 						{
-							if ( ArrayUrlsSelectedImages.indexOf(evt.srcElement.src) == -1)
+							var curImgUrl = evt.srcElement.attributes.imgurl.nodeValue;
+							var indexCurElement = ArrayUrlsSelectedImages.indexOf(curImgUrl);
+							if ( indexCurElement == -1)
 							{
-								ArrayUrlsSelectedImages.push(evt.srcElement.src);
+								ArrayUrlsSelectedImages.push(curImgUrl);
+								evt.srcElement.setAttribute( "class", "ImageSelectViewer_selected");
+
 							}
 							else
 							{
-								ArrayUrlsSelectedImages.pop(evt.srcElement.src);
+								ArrayUrlsSelectedImages.splice(indexCurElement, 1);
+								evt.srcElement.setAttribute( "class", "ImageSelectViewer");
 							}
 						}
 						else
@@ -434,29 +456,12 @@
 		}
 	}
 	
-	function CheckClickArea(width, height, offsetX, offsetY)
-	{
-		var areaInPx = 20;
-		var validArea = false;
-		
-		if ( ((width - offsetX) < areaInPx) && ((height - offsetY) < areaInPx) )
-		{
-			validArea = true;
-		}
-		else
-		{
-			validArea = false;
-		}
-		
-		return validArea;
-	}
-	
 	function ShowImages()
 	{
 		if ( ShiftFormCompleted && (RefArray.length != 0) && (TotalNumLoadedImages == RefArray.length) )
 		{	
 			DeleteAllImagesFromDiv("loadBox");
-		
+			
 			for (var i = 0; i < RefArray.length; i++)
 			{
 				document.getElementById("carousel").appendChild(RefArray[i]);
@@ -587,13 +592,28 @@
 		imgObj.src = imgUrl;
 		imgObj.style.width = SIZE_PREVIEW_IMAGE_IN_PX + "px";
 		
+		var divImage3 = document.createElement('div');
+		divImage3.setAttribute('class', 'ImageSelectViewer');
+		divImage3.setAttribute('id', 'ImageSelectViewerId');
+		divImage3.setAttribute('imgUrl', imgUrl);
+		
+		var divImage2 = document.createElement('div');
+		divImage2.setAttribute('class', 'ImageDiv');
+		divImage2.appendChild(imgObj);
+		
+		var divImage = document.createElement('div');
+		divImage.setAttribute('class', 'ImageSelectViewerContainer');
+		divImage.appendChild(divImage2);
+		divImage.appendChild(divImage3);
+		
 		var newlink = document.createElement('a');
 		newlink.setAttribute('href', "#");
-		newlink.appendChild(imgObj);
+		newlink.appendChild(divImage);
 		
 		var newLi = document.createElement('li');
 		newLi.setAttribute('data-preview', imgUrl);
 		newLi.appendChild(newlink);
+		
 		
 		RefArray.push(newLi);
 	}
