@@ -66,6 +66,54 @@
 						bottom: 0px;
 						background: #13A7C9;
 						border-radius: 50%;}
+										
+					.checkmark {
+						display:inline-block;
+						width: 150px;
+						height:150px;
+						-ms-transform: rotate(45deg); /* IE 9 */
+						-webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
+						transform: rotate(45deg);
+					}
+
+					.checkmark_circle_opacity {
+						position: absolute;
+						width:22px;
+						height:22px;
+						background-color: #E0FFFF;
+						opacity: 0.5;
+						border-radius:11px;
+						left:0;
+						top:0;
+					}
+					
+					.checkmark_circle_non_opacity {
+						position: absolute;
+						width:22px;
+						height:22px;
+						background-color: #A6ACC6;
+						border-radius:11px;
+						left:0;
+						top:0;
+					}
+
+					.checkmark_stem {
+						position: absolute;
+						width:3px;
+						height:9px;
+						background-color:#fff;
+						left:11px;
+						top:6px;
+					}
+
+					.checkmark_kick {
+						position: absolute;
+						width:3px;
+						height:3px;
+						background-color:#fff;
+						left:8px;
+						top:12px;
+					}
 						
 	</style>
 </head>
@@ -421,20 +469,20 @@
 					minItems : 4,
 					onClick : function( el, pos, evt ) 
 					{
-						if ( (evt.srcElement.className == 'ImageSelectViewer')|| (evt.srcElement.className == 'ImageSelectViewer_selected') )
+						if ( (evt.srcElement.parentElement.className == 'checkmark')|| (evt.srcElement.className == 'checkmark') )
 						{
-							var curImgUrl = evt.srcElement.attributes.imgurl.nodeValue;
+							var curImgUrl = evt.srcElement.parentElement.attributes.imgurl.nodeValue;
 							var indexCurElement = ArrayUrlsSelectedImages.indexOf(curImgUrl);
 							if ( indexCurElement == -1)
 							{
 								ArrayUrlsSelectedImages.push(curImgUrl);
-								evt.srcElement.setAttribute( "class", "ImageSelectViewer_selected");
+								evt.srcElement.parentElement.children[0].setAttribute( "class", "checkmark_circle_non_opacity");
 
 							}
 							else
 							{
 								ArrayUrlsSelectedImages.splice(indexCurElement, 1);
-								evt.srcElement.setAttribute( "class", "ImageSelectViewer");
+								evt.srcElement.parentElement.children[0].setAttribute( "class", "checkmark_circle_opacity");
 							}
 						}
 						else
@@ -592,23 +640,34 @@
 		imgObj.src = imgUrl;
 		imgObj.style.width = SIZE_PREVIEW_IMAGE_IN_PX + "px";
 		
-		var divImage3 = document.createElement('div');
-		divImage3.setAttribute('class', 'ImageSelectViewer');
-		divImage3.setAttribute('id', 'ImageSelectViewerId');
-		divImage3.setAttribute('imgUrl', imgUrl);
+		var spanImageSelecter = document.createElement('span');
+		spanImageSelecter.setAttribute('class', 'checkmark');
+		spanImageSelecter.setAttribute('imgUrl', imgUrl);
 		
-		var divImage2 = document.createElement('div');
-		divImage2.setAttribute('class', 'ImageDiv');
-		divImage2.appendChild(imgObj);
+		var divSelecterCircle = document.createElement('div');
+		divSelecterCircle.setAttribute('class', 'checkmark_circle_opacity');
+		spanImageSelecter.appendChild(divSelecterCircle);
+		
+		var divSelecterStem = document.createElement('div');
+		divSelecterStem.setAttribute('class', 'checkmark_stem');
+		spanImageSelecter.appendChild(divSelecterStem);
+		
+		var divSelecterKick = document.createElement('div');
+		divSelecterKick.setAttribute('class', 'checkmark_kick');
+		spanImageSelecter.appendChild(divSelecterKick);
 		
 		var divImage = document.createElement('div');
-		divImage.setAttribute('class', 'ImageSelectViewerContainer');
-		divImage.appendChild(divImage2);
-		divImage.appendChild(divImage3);
+		divImage.setAttribute('class', 'ImageDiv');
+		divImage.appendChild(imgObj);
+		
+		var divImageBlock = document.createElement('div');
+		divImageBlock.setAttribute('class', 'ImageSelectViewerContainer');
+		divImageBlock.appendChild(divImage);
+		divImageBlock.appendChild(spanImageSelecter);
 		
 		var newlink = document.createElement('a');
 		newlink.setAttribute('href', "#");
-		newlink.appendChild(divImage);
+		newlink.appendChild(divImageBlock);
 		
 		var newLi = document.createElement('li');
 		newLi.setAttribute('data-preview', imgUrl);
