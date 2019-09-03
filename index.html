@@ -390,7 +390,9 @@
 	{		
 		var urlStr = Url;
 		var massSubStringsUrl = urlStr.split("/");
-		var fileName = massSubStringsUrl[massSubStringsUrl.length - 1];
+		var tmpFileName = massSubStringsUrl[massSubStringsUrl.length - 1];
+		var massSubStringsUrl = tmpFileName.split("jpg");
+		var fileName = massSubStringsUrl[0] + "jpg";
 		
 		return fileName;
 	}
@@ -410,6 +412,7 @@
 		RefArray.length = 0;
 		//DeleteAllImagesFromDiv("carousel");
 		DeleteAllImagesFromDiv("loadBox");
+		ArrayUrlsSelectedImages = new Array();
 	}
 	
 	function ProcessButtonClick(form)
