@@ -12,6 +12,9 @@
 	<script src="elastislide/js/jquery.elastislide.js"></script>
 	<script src="FileSaver.js"></script>
 	<script src="https://vk.com/js/api/xd_connection.js?2"  type="text/javascript"></script>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" href="css/styleModal.css">
+
 
 	<style type='text/css'>
 	html { overflow:  hidden; }
@@ -38,7 +41,6 @@
 	{
 		position: absolute; /* Абсолютное позиционирование */
 		top: 230px;
-		margin: 0 auto;
 	}
 	
 	body 
@@ -67,66 +69,128 @@
 						background: #13A7C9;
 						border-radius: 50%;}
 										
-					.checkmark {
-						display:inline-block;
-						width: 150px;
-						height:150px;
-						-ms-transform: rotate(45deg); /* IE 9 */
-						-webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
-						transform: rotate(45deg);
-					}
+	.checkmark {
+		display:inline-block;
+		width: 150px;
+		height:150px;
+		-ms-transform: rotate(45deg); /* IE 9 */
+		-webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
+		transform: rotate(45deg);
+	}
 
-					.checkmark_circle_opacity {
-						position: absolute;
-						width:22px;
-						height:22px;
-						background-color: #E0FFFF;
-						opacity: 0.5;
-						border-radius:11px;
-						left:0;
-						top:0;
-					}
-					
-					.checkmark_circle_non_opacity {
-						position: absolute;
-						width:22px;
-						height:22px;
-						background-color: #A6ACC6;
-						border-radius:11px;
-						left:0;
-						top:0;
-					}
+	.checkmark_circle_opacity {
+		position: absolute;
+		width:22px;
+		height:22px;
+		background-color: #E0FFFF;
+		opacity: 0.5;
+		border-radius:11px;
+		left:0;
+		top:0;
+	}
+	
+	.checkmark_circle_non_opacity {
+		position: absolute;
+		width:22px;
+		height:22px;
+		background-color: #A6ACC6;
+		border-radius:11px;
+		left:0;
+		top:0;
+	}
 
-					.checkmark_stem {
-						position: absolute;
-						width:3px;
-						height:9px;
-						background-color:#fff;
-						left:11px;
-						top:6px;
-					}
+	.checkmark_stem {
+		position: absolute;
+		width:3px;
+		height:9px;
+		background-color:#fff;
+		left:11px;
+		top:6px;
+	}
 
-					.checkmark_kick {
-						position: absolute;
-						width:3px;
-						height:3px;
-						background-color:#fff;
-						left:8px;
-						top:12px;
-					}
-						
+	.checkmark_kick {
+		position: absolute;
+		width:3px;
+		height:3px;
+		background-color:#fff;
+		left:8px;
+		top:12px;
+	}
+	
+	.BUTTON_BGX {
+		-webkit-border-radius: 20px;
+		-moz-border-radius: 20px;
+		border-radius: 20px;
+		color: #FFFFFF;
+		font-family: Verdana;
+		font-size: 11px;
+		font-weight: 100;
+		padding: 7px;
+		background-color: #000000;
+		text-shadow: 1px 1px 20px #000000;
+		border: solid #000000 1px;
+		text-decoration: none;
+		display: inline-block;
+		cursor: pointer;
+	}
+
+	.BUTTON_BGX:active {
+		background: #BAB4B4;
+		background-image: -webkit-linear-gradient(top, #BAB4B4, #797777);
+		background-image: -moz-linear-gradient(top, #BAB4B4, #797777);
+		background-image: -ms-linear-gradient(top, #BAB4B4, #797777);
+		background-image: -o-linear-gradient(top, #BAB4B4, #797777);
+		background-image: linear-gradient(to bottom, #BAB4B4, #797777);
+		text-decoration: none;
+	}
+	
+	.BUTTON_BGX:focus {outline:0;}
+
+	input[type=text] {
+		padding:5px; 
+		border:2px solid #ccc; 
+		-webkit-border-radius: 5px;
+		border-radius: 5px;
+	}
+	
+	.inputForm:focus {outline:0;}
+
+
+	dialog{
+		position: absolute;
+        top: 50%;
+        left: 12.5%;
+		width: 400px; 
+		border-radius: 10px;
+	}
+	
 	</style>
 </head>
 
 <body>
+	<div class="container">
+	
+	<input id="modal" type="checkbox">
+	</label>
+	
+	<label class="modal-background" for="modal"></label>
+		<div class="modal-content">
+			<label class="modal-close" for="modal">&#10005;</label>
+			<h2>Sweet Modal</h2>
+			<p>Это ты пидор!</p>
+			<label class="modal-content-button" for="modal">OK</label>
+		</div> <!-- .modal-content -->
+	</div> <!-- .modal-container -->
+
 	<form>
 	<div id = "inputBox">
-		<input name="url" type="text" required size="60" placeholder="Ссылка на фотосет пользователя instagram">
-		<input type="button" onclick="ProcessButtonClick(this.form)" value="Получить фото">
-		<input type="button" onclick="SaveSelectedImages()" value="Сохранить"> 
-		<input type="button" onclick="SaveSelectedImagesInVk()" value="Сохранить ВК"> 
+		<input name="url" type="text" required size="50" placeholder="Адрес страницы Instagram с фото" class="inputForm">
+		<input type="button" onclick="ProcessButtonClick(this.form)" value="Скачать" class="BUTTON_BGX">
+		<input type="button" onclick="SaveSelectedImages()" value="Скачать" class="BUTTON_BGX"> 
+		<input type="button" onclick="SaveSelectedImagesInVk()" value="В альбом VK" class="BUTTON_BGX"> 
 	</div>
 	</form>
+	
  
 	<div id='loadBox'> </div>
 	
@@ -139,8 +203,22 @@
 			</div>
 	</div>
 	
-  
+	<center>
+	<dialog>
+	<p>Будет создан альбом "InstaSaver", в который будут сохранены выбранные изображения. Продолжить?</p>
+	<button id="AlbumCreateOk">Да</button>
+	<button id="AlbumCreateClose">Нет</button>
+	</dialog>
+	</center>
+	
 	<script>
+	
+	var dialog = document.querySelector('dialog');
+	
+	document.querySelector('#AlbumCreateOk').onclick = function() {
+	  dialog.close();
+	};
+	
 	var SIZE_PREVIEW_IMAGE_IN_PX = 90;
 	var SIZE_CURRENT_IMAGE_IN_PX = 300;
 	
@@ -253,9 +331,11 @@
 	{
 		if (AlbumId != null)
 		{
+			dialog.showModal();
+			
 			if (AlbumId == -1)
 			{
-				CreateAlbum();
+				//CreateAlbum();
 			}
 		}
 		else
@@ -417,6 +497,13 @@
 	
 	function ProcessButtonClick(form)
 	{
+		document.getElementById("modal").checked = true;
+				
+		if ( form.elements.url.value == "" )
+		{
+			return;
+		}
+		
 		if (LoadWasOnce == false)
 		{
 			ShiftForm(form);
@@ -597,17 +684,14 @@
 	
 	function ParseSiteInfo( srcSiteInfo )
 	{
-		var targetStartPos = "display_url";
-		var targetFinishPos = "display_resources";
+		var targetStartPos = "display_url\":\"";
+		var targetFinishPos = ["\",\"display_resources", "\\"];
 		
 		var curPos = 0;
 		var curStartPos = 0;
-		var curFinishPos = 0;
+		var finishPos = 10000000;
 		
 		var cntTotalNumImgs = 0;
-		
-		var offsetStartPos = 14;
-		var offsetFinishPos = 3;
 		
 		while (true) 	
 		{
@@ -624,11 +708,29 @@
 			{
 				continue;
 			}
-				
-			curFinishPos = srcSiteInfo.indexOf(targetFinishPos, curStartPos);
 			
-			var finalStartPosString = curStartPos + offsetStartPos;
-			var finalFinishPosString = curFinishPos - offsetFinishPos;
+			finishPos = 10000000;
+			for ( var curNumTargetFinish = 0; curNumTargetFinish < targetFinishPos.length; curNumTargetFinish++ )
+			{
+				var curFinishPos = srcSiteInfo.indexOf(targetFinishPos[curNumTargetFinish], curStartPos);				
+				if (curFinishPos == -1)
+				{
+					continue;
+				}
+			
+				if ( curFinishPos < finishPos )
+				{
+					finishPos = curFinishPos;
+				}
+			}
+			
+			if ( finishPos == 1000 )
+			{
+				continue;
+			}
+			
+			var finalStartPosString = curStartPos + targetStartPos.length;
+			var finalFinishPosString = finishPos;
 			
 			var urlCurImgInSet = srcSiteInfo.substring( finalStartPosString, finalFinishPosString );
 			
