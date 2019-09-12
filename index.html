@@ -171,27 +171,23 @@
 	<div class="container">
 	
 	<input id="modal" type="checkbox">
-	</label>
 	
 	<label class="modal-background" for="modal"></label>
-		<div class="modal-content">
-			<label class="modal-close" for="modal">&#10005;</label>
-			<h2>Sweet Modal</h2>
-			<p>Это ты пидор!</p>
-			<label class="modal-content-button" for="modal">OK</label>
+		<div class="modal-content" id="ModalContent">
+			<h2 id="LabelModal"></h2>
+			<p id="TextModal"></p>
 		</div> <!-- .modal-content -->
 	</div> <!-- .modal-container -->
 
 	<form>
 	<div id = "inputBox">
 		<input name="url" type="text" required size="50" placeholder="Адрес страницы Instagram с фото" class="inputForm">
-		<input type="button" onclick="ProcessButtonClick(this.form)" value="Скачать" class="BUTTON_BGX">
+		<input type="button" onclick="ProcessButtonClick(this.form)" value="Загрузить" class="BUTTON_BGX">
 		<input type="button" onclick="SaveSelectedImages()" value="Скачать" class="BUTTON_BGX"> 
 		<input type="button" onclick="SaveSelectedImagesInVk()" value="В альбом VK" class="BUTTON_BGX"> 
 	</div>
 	</form>
 	
- 
 	<div id='loadBox'> </div>
 	
 	<div class="container demo-4">
@@ -199,26 +195,11 @@
             <div class="main">
 				<div class="gallery">
 				</div>
-
 			</div>
 	</div>
 	
-	<center>
-	<dialog>
-	<p>Будет создан альбом "InstaSaver", в который будут сохранены выбранные изображения. Продолжить?</p>
-	<button id="AlbumCreateOk">Да</button>
-	<button id="AlbumCreateClose">Нет</button>
-	</dialog>
-	</center>
-	
 	<script>
-	
-	var dialog = document.querySelector('dialog');
-	
-	document.querySelector('#AlbumCreateOk').onclick = function() {
-	  dialog.close();
-	};
-	
+
 	var SIZE_PREVIEW_IMAGE_IN_PX = 90;
 	var SIZE_CURRENT_IMAGE_IN_PX = 300;
 	
@@ -236,6 +217,8 @@
 	var ImagesFormData = new FormData();
 	var ImageBlob = null;
 	var LoadWasOnce = false;
+	var Btn1ModalClick = false;
+	var Btn2ModalClick = false;
 
 	var UrlStr = document.location.href;
 	var UrlParams = UrlStr.replace('?','').split('&').reduce(
@@ -249,6 +232,21 @@
 
 	window.onload = function ()
 	{
+		document.getElementById("modal").onchange = function() {
+			var modalContent = document.getElementById("ModalContent");
+			var childNodes = modalContent.getElementsByClassName("modal-content-button");
+		
+			var totalNumButtons = childNodes.length;
+			
+			for ( var nButton = 0; nButton < totalNumButtons; nButton++ )
+			{
+				modalContent.removeChild( childNodes[0] );
+			}
+			
+			Btn1ModalClick = false;
+			Btn2ModalClick = false;
+		};
+		
 		VK.init(function() { 
 		//	VK.callMethod("setTitle", "InstaSaver");
 		//	VK.callMethod("showInstallBox");
@@ -272,6 +270,51 @@
 		CheckAndCreateAlbum();
 		GetServerForLoadPhoto();
 		UploadSelectedImages();
+	}
+	
+	function CreateModalWindow( labelModal, textModal, btnName1, btnName2 )
+	{
+		document.getElementById("LabelModal").innerHTML = labelModal;
+		document.getElementById("TextModal").innerHTML = textModal;
+		
+		var newlabel = "";
+		var modalContent = document.getElementById("ModalContent");
+		
+		if ( btnName1 != "" )
+		{
+			newlabel = document.createElement("Label");
+			newlabel.setAttribute("class", "modal-content-button");
+			newlabel.setAttribute("for", "modal");
+			newlabel.innerHTML = btnName1;
+			newlabel.addEventListener("click", function() { Btn1ModalClick = true; }, false);
+			modalContent.appendChild(newlabel);
+		}
+		
+		if ( btnName2 != "" )
+		{
+			newlabel = document.createElement("Label");
+			newlabel.setAttribute("class", "modal-content-button");
+			newlabel.setAttribute("for", "modal");
+			newlabel.innerHTML = btnName2;
+			newlabel.addEventListener("click", function() { Btn2ModalClick = true; }, false);
+			modalContent.appendChild(newlabel);
+		}
+		
+		if ( (btnName1 != "") && (btnName2 != "") )
+		{
+			newlabel = document.createElement("Label");
+			newlabel.setAttribute("class", "modal-close");
+			newlabel.setAttribute("for", "modal");
+			newlabel.innerHTML = "&#10005;";
+			modalContent.appendChild(newlabel);
+		}
+		
+		document.getElementById("modal").checked = true;
+		
+		if ( (btnName1 == "") && (btnName2 == "") )
+		{
+			setTimeout( function() { document.getElementById("modal").checked = false; }, 1000 ); 
+		}
 	}
 	
 	function UploadSelectedImages ()
@@ -330,9 +373,7 @@
 	function CheckAndCreateAlbum()
 	{
 		if (AlbumId != null)
-		{
-			dialog.showModal();
-			
+		{	
 			if (AlbumId == -1)
 			{
 				//CreateAlbum();
@@ -367,7 +408,7 @@
 		}
 	}
 	
-	function UploadPhoto( photoUrl)
+	function UploadPhoto( photoUrl )
 	{		
 		var encodeUri = encodeURIComponent(UrlUploadServer);
 		var someObj = {url:encodeUri, photo:photoUrl};
@@ -490,24 +531,32 @@
 		ImagesShown = false;
 		TotalNumLoadedImages = 0;
 		RefArray.length = 0;
-		//DeleteAllImagesFromDiv("carousel");
 		DeleteAllImagesFromDiv("loadBox");
 		ArrayUrlsSelectedImages = new Array();
 	}
 	
-	function ProcessButtonClick(form)
+	function TotalReset()
 	{
-		document.getElementById("modal").checked = true;
-				
+		ImagesShown = false;
+		TotalNumLoadedImages = 0;
+		RefArray.length = 0;
+		DeleteAllImagesFromDiv("loadBox");
+		ArrayUrlsSelectedImages = new Array();
+		ResetShiftForm(this.form);
+		document.getElementById("loadBox").remove();
+	}
+	
+	function ProcessButtonClick(form)
+	{			
 		if ( form.elements.url.value == "" )
 		{
+			CreateModalWindow( "Ошибка!", "Отсутствует ссылка на изображения instagram!", "Ок" );
 			return;
 		}
 		
 		if (LoadWasOnce == false)
 		{
 			ShiftForm(form);
-			
 			LoadWasOnce = true;
 		}
 		else
@@ -651,7 +700,24 @@
 		}
 		else if ( curTopValInt < 140 )
 		{
+			var self = this;
+			setTimeout( function() { self.disabled = false; }, 1);
 			ShiftFormCompleted = true;
+		}
+    }
+	
+	function ResetShiftForm(form) 
+	{
+		var inputElems = document.getElementById('inputBox');
+		
+		var curTopVal = getComputedStyle(inputElems).top;
+		var curTopValInt = parseInt(curTopVal);
+		
+		if( curTopValInt < 230 )
+		{
+			curTopValInt += 10;
+			inputElems.style.top = (curTopValInt + "px");
+			setTimeout(ResetShiftForm, "1");
 		}
     }
 	
@@ -736,6 +802,12 @@
 			
 			AddImage( urlCurImgInSet );
 		}
+		
+		if ( RefArray.length == 0 )
+		{
+			TotalReset();
+			//CreateModalWindow( "Ошибка!", "По данной ссылке на найдены изображения!", "Ок" );
+		}
 	}
 	
 	function AddImage( imgUrl )
@@ -777,7 +849,6 @@
 		var newLi = document.createElement('li');
 		newLi.setAttribute('data-preview', imgUrl);
 		newLi.appendChild(newlink);
-		
 		
 		RefArray.push(newLi);
 	}

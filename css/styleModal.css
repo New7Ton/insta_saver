@@ -121,16 +121,16 @@ label {
 .container #modal:checked ~ .modal-content .modal-content-button {
   position: relative;
   float: right;
-  margin: 0;
+  margin: 0px 10px 0px 0;
   padding: 10px 20px;
   color: white;
   font-weight: 100;
   border-radius: 3px;
-  background-color: #2980b9;
+  background-color: #000000;
   z-index: 100;
 }
 
-.container #modal:checked ~ .modal-content .modal-content-button:hover, .container #modal:checked ~ .modal-content .modal-content-button:focus {
-  background-color: #409ad5;
+.container #modal:checked ~ .modal-content .modal-content-button:active{
+  background-color: #797777;
   z-index: 100;
 }
