@@ -685,6 +685,8 @@
 		}
 	}
 	
+	var timeouts = [];
+	
     function ShiftForm(form) 
 	{
 		var inputElems = document.getElementById('inputBox');
@@ -696,18 +698,26 @@
 		{
 			curTopValInt -= 3;
 			inputElems.style.top = (curTopValInt + "px");
-			setTimeout(ShiftForm, "1");
+			timeouts.push( setTimeout(ShiftForm, "1") );
 		}
 		else if ( curTopValInt < 140 )
 		{
-			var self = this;
-			setTimeout( function() { self.disabled = false; }, 1);
+			for (var i = 0; i < timeouts.length; i++) 
+			{
+				clearTimeout(timeouts[i]);
+			}
+
 			ShiftFormCompleted = true;
 		}
     }
 	
 	function ResetShiftForm(form) 
 	{
+		for (var i = 0; i < timeouts.length; i++) 
+		{
+			clearTimeout(timeouts[i]);
+		}
+			
 		var inputElems = document.getElementById('inputBox');
 		
 		var curTopVal = getComputedStyle(inputElems).top;
