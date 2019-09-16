@@ -242,9 +242,6 @@
 			{
 				modalContent.removeChild( childNodes[0] );
 			}
-			
-			Btn1ModalClick = false;
-			Btn2ModalClick = false;
 		};
 		
 		VK.init(function() { 
@@ -272,48 +269,57 @@
 		UploadSelectedImages();
 	}
 	
+	function ResetDataModalWindow(  )
+	{
+		Btn1ModalClick = false;
+		Btn2ModalClick = false;
+	}
+	
 	function CreateModalWindow( labelModal, textModal, btnName1, btnName2 )
 	{
-		document.getElementById("LabelModal").innerHTML = labelModal;
-		document.getElementById("TextModal").innerHTML = textModal;
-		
-		var newlabel = "";
-		var modalContent = document.getElementById("ModalContent");
-		
-		if ( btnName1 != "" )
+		if ( document.getElementById("modal").checked == false )
 		{
-			newlabel = document.createElement("Label");
-			newlabel.setAttribute("class", "modal-content-button");
-			newlabel.setAttribute("for", "modal");
-			newlabel.innerHTML = btnName1;
-			newlabel.addEventListener("click", function() { Btn1ModalClick = true; }, false);
-			modalContent.appendChild(newlabel);
-		}
-		
-		if ( btnName2 != "" )
-		{
-			newlabel = document.createElement("Label");
-			newlabel.setAttribute("class", "modal-content-button");
-			newlabel.setAttribute("for", "modal");
-			newlabel.innerHTML = btnName2;
-			newlabel.addEventListener("click", function() { Btn2ModalClick = true; }, false);
-			modalContent.appendChild(newlabel);
-		}
-		
-		if ( (btnName1 != "") && (btnName2 != "") )
-		{
-			newlabel = document.createElement("Label");
-			newlabel.setAttribute("class", "modal-close");
-			newlabel.setAttribute("for", "modal");
-			newlabel.innerHTML = "&#10005;";
-			modalContent.appendChild(newlabel);
-		}
-		
-		document.getElementById("modal").checked = true;
-		
-		if ( (btnName1 == "") && (btnName2 == "") )
-		{
-			setTimeout( function() { document.getElementById("modal").checked = false; }, 1000 ); 
+			document.getElementById("LabelModal").innerHTML = labelModal;
+			document.getElementById("TextModal").innerHTML = textModal;
+			
+			var newlabel = "";
+			var modalContent = document.getElementById("ModalContent");
+			
+			if ( btnName1 != undefined)
+			{
+				newlabel = document.createElement("Label");
+				newlabel.setAttribute("class", "modal-content-button");
+				newlabel.setAttribute("for", "modal");
+				newlabel.innerHTML = btnName1;
+				newlabel.addEventListener("click", function() { Btn1ModalClick = true; }, false);
+				modalContent.appendChild(newlabel);
+			}
+			
+			if ( btnName2 != undefined)
+			{
+				newlabel = document.createElement("Label");
+				newlabel.setAttribute("class", "modal-content-button");
+				newlabel.setAttribute("for", "modal");
+				newlabel.innerHTML = btnName2;
+				newlabel.addEventListener("click", function() { Btn2ModalClick = true; }, false);
+				modalContent.appendChild(newlabel);
+			}
+			
+			if ( (btnName1 != undefined) && (btnName2 != undefined) )
+			{
+				newlabel = document.createElement("Label");
+				newlabel.setAttribute("class", "modal-close");
+				newlabel.setAttribute("for", "modal");
+				newlabel.innerHTML = "&#10005;";
+				modalContent.appendChild(newlabel);
+			}
+			
+			document.getElementById("modal").checked = true;
+			
+			if ( (btnName1 === "undefined") && (btnName2 === "undefined") )
+			{
+				setTimeout( function() { document.getElementById("modal").checked = false; }, 1000 ); 
+			}
 		}
 	}
 	
@@ -334,7 +340,7 @@
 	
 	function GetAppAlbumId()
 	{
-		if (VkSuccessInit)
+		if ( VkSuccessInit )
 		{	
 			$.ajax({
 			  url: 'https://api.vk.com/method/photos.getAlbums?',
@@ -374,9 +380,21 @@
 	{
 		if (AlbumId != null)
 		{	
-			if (AlbumId == -1)
+			if ( AlbumId == -1 )
 			{
-				//CreateAlbum();
+				CreateModalWindow( "Внимание!", "Для сохранения фото будет создан альбом \"InstaSaver\". Продолжить?", "Отмена", "Ок" );
+								
+				if ( Btn1ModalClick == true )
+				{
+					TotalReset();
+				}
+				else if ( Btn2ModalClick == true )
+				{
+					alert( "Альбом создан" );
+					//CreateAlbum();
+				}
+				
+				ResetDataModalWindow( );
 			}
 		}
 		else
@@ -543,7 +561,14 @@
 		DeleteAllImagesFromDiv("loadBox");
 		ArrayUrlsSelectedImages = new Array();
 		ResetShiftForm(this.form);
-		document.getElementById("loadBox").remove();
+		
+		var loadBox = document.getElementById("loadBox");
+		var numChilds = loadBox.children.length;
+		
+		for ( var nChild = 0; nChild < numChilds; nChild++ )
+		{
+			loadBox.removeChild( loadBox.firstChild );
+		}
 	}
 	
 	function ProcessButtonClick(form)
@@ -551,6 +576,7 @@
 		if ( form.elements.url.value == "" )
 		{
 			CreateModalWindow( "Ошибка!", "Отсутствует ссылка на изображения instagram!", "Ок" );
+			ResetDataModalWindow( );
 			return;
 		}
 		
@@ -685,8 +711,7 @@
 		}
 	}
 	
-	var timeouts = [];
-	
+	var TimeoutsShiftForm = [];	
     function ShiftForm(form) 
 	{
 		var inputElems = document.getElementById('inputBox');
@@ -698,26 +723,27 @@
 		{
 			curTopValInt -= 3;
 			inputElems.style.top = (curTopValInt + "px");
-			timeouts.push( setTimeout(ShiftForm, "1") );
+			TimeoutsShiftForm.push( setTimeout(ShiftForm, "1") );
 		}
 		else if ( curTopValInt < 140 )
 		{
-			for (var i = 0; i < timeouts.length; i++) 
-			{
-				clearTimeout(timeouts[i]);
-			}
-
+			ClearTimeoutsShiftForm();
 			ShiftFormCompleted = true;
 		}
     }
 	
+	function ClearTimeoutsShiftForm() 
+	{
+		for (var i = 0; i < TimeoutsShiftForm.length; i++) 
+		{
+			clearTimeout( TimeoutsShiftForm[i] );
+		}
+	}
+	
 	function ResetShiftForm(form) 
 	{
-		for (var i = 0; i < timeouts.length; i++) 
-		{
-			clearTimeout(timeouts[i]);
-		}
-			
+		ClearTimeoutsShiftForm();
+		
 		var inputElems = document.getElementById('inputBox');
 		
 		var curTopVal = getComputedStyle(inputElems).top;
@@ -725,7 +751,7 @@
 		
 		if( curTopValInt < 230 )
 		{
-			curTopValInt += 10;
+			curTopValInt += 3;
 			inputElems.style.top = (curTopValInt + "px");
 			setTimeout(ResetShiftForm, "1");
 		}
@@ -752,7 +778,8 @@
 
 		xhr.onerror = function() 
 		{
-		  alert( 'Ошибка ' + this.status );
+			CreateModalWindow( "Ошибка!", "Указана некорректная ссылка!", "Ок" );
+			ResetDataModalWindow( );
 		}
 
 		xhr.send();
@@ -816,7 +843,8 @@
 		if ( RefArray.length == 0 )
 		{
 			TotalReset();
-			//CreateModalWindow( "Ошибка!", "По данной ссылке на найдены изображения!", "Ок" );
+			CreateModalWindow( "Ошибка!", "По данной ссылке на найдены изображения!", "Ок" );
+			ResetDataModalWindow( );
 		}
 	}
 	
