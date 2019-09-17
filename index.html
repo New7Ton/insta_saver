@@ -331,6 +331,8 @@
 			{	
 				UploadPhoto(ArrayUrlsSelectedImages[nImageUrl]);
 			}
+			
+			CreateModalWindow( "Инфо", "Выбранные фото были сохранены в альбоме \"InstaSaver\"" );
 		}
 		else
 		{
@@ -376,6 +378,28 @@
 		}
 	}
 	
+	function ProcessAlbumCreateDescision() 
+	{
+		if( (Btn1ModalClick != false) || (Btn2ModalClick != false) ) 
+		{
+			if ( Btn1ModalClick == true )
+			{
+				CreateModalWindow( "Внимание!", "Выбранные фото не были сохранены в альбом ВК" );
+			}
+			else if ( Btn2ModalClick == true )
+			{
+				//CreateAlbum();
+			}
+				
+			ResetDataModalWindow( );
+			return;
+		}
+		else
+		{
+			setTimeout(ProcessAlbumCreateDescision, 50);//wait 50 millisecnds then recheck
+		}
+	}
+	
 	function CheckAndCreateAlbum()
 	{
 		if (AlbumId != null)
@@ -383,18 +407,7 @@
 			if ( AlbumId == -1 )
 			{
 				CreateModalWindow( "Внимание!", "Для сохранения фото будет создан альбом \"InstaSaver\". Продолжить?", "Отмена", "Ок" );
-								
-				if ( Btn1ModalClick == true )
-				{
-					TotalReset();
-				}
-				else if ( Btn2ModalClick == true )
-				{
-					alert( "Альбом создан" );
-					//CreateAlbum();
-				}
-				
-				ResetDataModalWindow( );
+				ProcessAlbumCreateDescision();
 			}
 		}
 		else
