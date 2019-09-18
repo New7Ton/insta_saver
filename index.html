@@ -18,20 +18,9 @@
 	</head>
 
 	<body>
-		<div class="container">
-		
-		<input id="modal" type="checkbox">
-		
-		<label class="modal-background" for="modal"></label>
-			<div class="modal-content" id="ModalContent">
-				<h2 id="LabelModal"></h2>
-				<p id="TextModal"></p>
-			</div> <!-- .modal-content -->
-		</div> <!-- .modal-container -->
-
 		<form>
 		<div id = "inputBox">
-			<input name="url" type="text" required size="50" placeholder="Адрес страницы Instagram с фото" class="inputForm">
+			<input name="url" type="text" required size="40" placeholder="Адрес страницы Instagram с фото" class="inputForm">
 			<input type="button" onclick="ProcessButtonClick(this.form)" value="Загрузить" class="BUTTON_BGX">
 			<input type="button" onclick="SaveSelectedImages()" value="Скачать" class="BUTTON_BGX"> 
 			<input type="button" onclick="SaveSelectedImagesInVk()" value="В альбом VK" class="BUTTON_BGX"> 
@@ -47,6 +36,16 @@
 					</div>
 				</div>
 		</div>
+		
+		<div class="container">
+			<input id="modal" type="checkbox">
+			<label class="modal-background" for="modal"></label>
+				<div class="modal-content" id="ModalContent">
+					<h2 id="LabelModal"></h2>
+					<p id="TextModal"></p>
+				</div> <!-- .modal-content -->
+		</div> <!-- .modal-container -->
+		
 		<script type="text/javascript" charset="UTF-8" src="js/main.js"></script>
 	</body>
 </html>
