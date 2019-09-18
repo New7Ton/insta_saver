@@ -1,6 +1,5 @@
 html {
   color: #333;
-  background-color: #16a085;
 }
 
 label {
@@ -13,11 +12,13 @@ label {
   margin: 0 auto;
   padding: 50px;
 }
+
 .container h1 {
   font-weight: 100;
   color: white;
   text-align: center;
 }
+
 .container .modal-button {
   position: relative;
   display: block;
@@ -34,33 +35,39 @@ label {
   box-shadow: 0 0 45px rgba(0, 0, 0, 0.2);
   transition: all 250ms;
 }
+
 .container .modal-button span {
   font-size: 12px;
 }
+
 .container .modal-button:hover, .container .modal-button:focus {
   color: #16a085;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
 }
+
 .container .modal-content,
 .container .modal-background {
-  visibility: hidden;
   width: 0;
   height: 0;
-  opacity: 0;
+  opacity: 1;
   overflow: hidden;
   cursor: pointer;
 }
+
 .container .modal-background {
   transition: height 250ms;
 }
+
 .container .modal-content {
   transform: scale(0);
   transition: transform 500ms;
 }
+
 .container #modal {
   display: none;
   z-index: 100;
 }
+
 .container #modal:checked ~ .modal-background {
   position: fixed;
   top: 0;
@@ -73,6 +80,7 @@ label {
   transition: height 250ms;
   z-index: 100;
 }
+
 .container #modal:checked ~ .modal-content {
   position: fixed;
   top: 50%;

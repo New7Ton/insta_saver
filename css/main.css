@@ -1,0 +1,146 @@
+html { overflow:  hidden; }
+	
+#box img 
+{
+	display: block;
+	width: 200px; 
+	background: white;
+	padding: 1px;
+	padding-right: 10px; 
+	border: solid 1px white; 
+	float: left;
+}
+
+#loadBox 
+{
+	position: absolute; /* Абсолютное позиционирование */
+	top: 250px;
+	left: 230px;
+}
+
+#inputBox 
+{
+	position: absolute; /* Абсолютное позиционирование */
+	top: 230px;
+}
+
+body 
+{
+	background: white;
+	background-color: white;
+}
+
+.ImageSelectViewerContainer { position: relative; }
+.ImageDiv { }
+
+.ImageSelectViewer { position: absolute; 
+					width: 30px; 
+					height: 30px;
+					right: 0px; 
+					bottom: 0px;
+					background: #83A7C9;
+					border-radius: 50%;}
+					
+
+.ImageSelectViewer_selected { position: absolute; 
+					width: 30px; 
+					height: 30px;
+					right: 0px; 
+					bottom: 0px;
+					background: #13A7C9;
+					border-radius: 50%;}
+									
+.checkmark {
+	display:inline-block;
+	width: 150px;
+	height:150px;
+	-ms-transform: rotate(45deg); /* IE 9 */
+	-webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
+	transform: rotate(45deg);
+}
+
+.checkmark_circle_opacity {
+	position: absolute;
+	width:22px;
+	height:22px;
+	background-color: #E0FFFF;
+	opacity: 0.5;
+	border-radius:11px;
+	left:0;
+	top:0;
+}
+
+.checkmark_circle_non_opacity {
+	position: absolute;
+	width:22px;
+	height:22px;
+	background-color: #A6ACC6;
+	border-radius:11px;
+	left:0;
+	top:0;
+}
+
+.checkmark_stem {
+	position: absolute;
+	width:3px;
+	height:9px;
+	background-color:#fff;
+	left:11px;
+	top:6px;
+}
+
+.checkmark_kick {
+	position: absolute;
+	width:3px;
+	height:3px;
+	background-color:#fff;
+	left:8px;
+	top:12px;
+}
+
+.BUTTON_BGX {
+	-webkit-border-radius: 20px;
+	-moz-border-radius: 20px;
+	border-radius: 20px;
+	color: #FFFFFF;
+	font-family: Verdana;
+	font-size: 11px;
+	font-weight: 100;
+	padding: 7px;
+	background-color: #000000;
+	text-shadow: 1px 1px 20px #000000;
+	border: solid #000000 1px;
+	text-decoration: none;
+	display: inline-block;
+	cursor: pointer;
+}
+
+.BUTTON_BGX:active {
+	background: #BAB4B4;
+	background-image: -webkit-linear-gradient(top, #BAB4B4, #797777);
+	background-image: -moz-linear-gradient(top, #BAB4B4, #797777);
+	background-image: -ms-linear-gradient(top, #BAB4B4, #797777);
+	background-image: -o-linear-gradient(top, #BAB4B4, #797777);
+	background-image: linear-gradient(to bottom, #BAB4B4, #797777);
+	text-decoration: none;
+}
+
+.BUTTON_BGX:focus {outline:0;}
+
+input[type=text] {
+	padding:5px; 
+	border:2px solid #ccc; 
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+}
+
+.inputForm:focus {outline:0;}
+
+
+dialog{
+	position: absolute;
+	top: 50%;
+	left: 12.5%;
+	width: 400px; 
+	border-radius: 10px;
+}
